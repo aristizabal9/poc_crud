@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+spec:
+  selector:
+    db: mongodb
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-deployment
+  labels:
+    db: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      db: mongodb
+  template:
+    metadata:
+      labels:
+        db: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo
+        ports:
+        - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: heros-service
+spec:
+  selector:
+    app: heros
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 4000
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heros-deployment
+  labels:
+    app: heros
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: heros
+  template:
+    metadata:
+      labels:
+        app: heros
+    spec:
+      containers:
+      - name: heros-app
+        image: heros-crud:latest
+        # Usado para tomar imagenes locales
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 4000
+      initContainers:
+      - name: check-db
+        image: busybox
+        command: ['sh', '-c', 'for i in {1..10}; do sleep 5; echo -e "\x1dclose\x0d" | telnet mongodb-service 27017; if [ $? -eq 0 ]; then break; fi; done;']

@@ -1,0 +1,30 @@
+# MongoDB
+docker run --name mongo -d -p 27017:27017 mongo --noauth --bind_ip=0.0.0.0
+# Local
+node server.js
+# Docker build
+docker build -t heros-crud .
+# Docker run
+docker run --name heros-api -d -p 4000:4000 heros-crud
+# Create application
+kubectl apply -f deployment.yaml
+# Restart application
+kubectl delete pods -l app=heros
+# Destroy application
+kubectl delete -f deployment.yaml
+# Minikube docker daemon
+eval $(minikube docker-env)
+# Service URL
+export myURL=$(minikube service heros-service --url)
+# Create heros
+curl -X POST -d '{"name": "Spiderman", "description": "Trepa paredes"}' -H "Content-Type: application/json" $myURL/api/create | jq .
+curl -X POST -d '{"name": "Batman", "description": "El murcielago"}' -H "Content-Type: application/json" $myURL/api/create | jq .
+curl -X POST -d '{"name": "Superman", "description": "El hombre de acero"}' -H "Content-Type: application/json" $myURL/api/create | jq .
+# List heros
+curl $myURL/api/get | jq .
+# Get a hero
+curl $myURL/api/get/Batman | jq .
+# Update a hero
+curl -X PUT -d '{"name": "Batman", "description": "El caballero de la noche"}' -H "Content-Type: application/json" $myURL/api/update/5d83c8815a5aeac1b905cdc2 | jq .
+# Delete a hero
+curl -X DELETE $myURL/api/remove/5d83c9be12c394c4dc7e02ed | jq .
